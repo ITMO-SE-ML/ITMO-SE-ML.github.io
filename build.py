@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 import json
 ROOT=Path(__file__).resolve().parent
 cfg=json.loads((ROOT/'site.json').read_text())
-for key in ['bot_url','chat_url','grades_url','organization_url','materials_folder_url']:
+for key in ['bot_url','chat_url','grades_url','organization_url','archive_folder_url']:
     value=cfg.get(key)
     if value and (urlparse(value).scheme!='https' or not urlparse(value).netloc):
         raise ValueError(f'{key} must be an absolute HTTPS URL')
@@ -30,12 +30,12 @@ html='''<!doctype html>
 <main id="main"><header><div class="topline"><span class="eyebrow">Машинное обучение</span><span>Осенний семестр · 2026</span></div>
 <h1>Материалы курса</h1><p class="intro">Лекции, задания и всё, что нужно для учёбы в течение семестра.</p>
 <div class="quick"><a href="#homework"><strong>Домашние задания</strong><small>Условия и репозитории</small></a><a href="@@grades_url@@"><strong>Ведомость</strong><small>Журнал проверок ДЗ 2026</small></a><a href="#taiga"><strong>Бот TAIGA</strong><small>Получение онлайн-домашек</small></a></div></header>
-<section id="materials"><div class="sectionhead"><h2>Лекции и практика</h2><span>Актуальные материалы · 2026/27</span></div>
+<section id="materials"><div class="sectionhead"><h2>Лекции и практика</h2><span>Актуальные материалы · 2026/27</span></div><p class="note">Новые лекции публикуются только на этом сайте. Скачивайте PDF по ссылкам ниже.</p>
 <div class="lectures">
 <article class="lecture"><div class="number">01</div><div><h3>Машинное обучение и анализ данных</h3><p>Задачи ML, этапы работы с данными, признаки, визуализация и базовый EDA.</p><div class="links"><a href="materials/lecture-01.pdf">Слайды · PDF</a><a href="materials/eda-wine.py" download>Пример EDA · Python</a></div></div></article>
 <article class="lecture"><div class="number">02</div><div><h3>EDA и уменьшение размерности</h3><p>Распределения, статистический анализ, стандартизация, проклятие размерности и PCA.</p><div class="links"><a href="materials/lecture-02.pdf">Слайды · PDF</a></div></div></article>
 <article class="lecture"><div class="number">03</div><div><h3>kNN, метрики и оценка качества</h3><p>Повторение стандартизации и PCA. kNN, SMOTE, train/validation/test, cross-validation, confusion matrix, ROC/PR. Применение ближайших соседей в поиске и RAG.</p><div class="links"><a href="materials/lecture-03.pdf">Слайды · PDF</a></div></div></article>
-</div><p class="note"><a href="@@materials_folder_url@@">Общая папка с презентациями</a> · <a href="#archive">Материалы предыдущего потока</a></p></section>
+</div></section>
 <section id="homework"><div class="sectionhead"><h2>Домашние задания</h2><span>Условия доступны на GitHub</span></div>
 <div class="homeworks"><article class="homework"><p class="eyebrow">ДЗ 01 · Онлайн</p><h3>First Date with Data</h3><p>NumPy и pandas на данных WFP Food Prices: обработка таблиц и временных рядов, реализация функций и открытые тесты.</p><a class="button" href="https://github.com/ITMO-SE-ML/hw01-y26-first-date-with-data/blob/main/HW01.md">Открыть условие</a><p class="meta"><strong>Дедлайн:</strong> 11 сентября, 23:59 МСК<br><a href="https://github.com/ITMO-SE-ML/hw01-y26-first-date-with-data">Репозиторий и запуск тестов</a></p></article>
 <article class="homework"><p class="eyebrow">ДЗ 02 · Очная защита</p><h3>EDA: исследование ДТП</h3><p>Данные своего региона, визуализации и карты, три статистические гипотезы, PCA и t-SNE. Результат — дашборд и отчёт.</p><a class="button" href="https://github.com/ITMO-SE-ML/hw02-y26-eda">Открыть условие</a><p class="meta"><strong>Дедлайн:</strong> будет объявлен<br><a href="https://github.com/ITMO-SE-ML/hw02-y26-eda/blob/main/docs/README.md">Документация и быстрый старт</a></p></article></div>
@@ -51,9 +51,9 @@ html='''<!doctype html>
 <div class="rules"><article><h3>Онлайн-работы</h3><p>После сдачи — мини-тест на практике: 5 минут, 5 вопросов. Балл за лабораторную: <strong>X × max(0,5; T)</strong>, где X — балл за решение, а T — доля баллов за тест от 0 до 1.</p><p>Мини-тест не переписывается. При пропуске T = 0, поэтому сохраняется половина баллов за решение.</p></article><article><h3>Очные защиты</h3><p>Условие берите по прямой ссылке на GitHub. Выполняйте работу удобным способом; получать её через TAIGA не требуется.</p><p>Покажите результат и объясните постановку задачи, выбор данных, методов и метрик, эксперименты и выводы. Формат и критерии указаны в условии конкретной работы.</p><p>LLM можно использовать как инструмент. Свои решения и полученные результаты нужно уметь объяснить самостоятельно.</p></article></div>
 <details><summary>Рубежки и экзамен</summary><p class="note">Рубежные работы: <strong>20 октября</strong> и <strong>15 декабря 2026</strong>, во время практических занятий. Письменно, на бумаге; без конспектов, других материалов и электронных устройств.</p><p>Для «3» предусмотрен теоретический экзамен. Для «4» можно выбрать теорию или проект. Для «5» нужен итоговый практический проект в формате мини-курсовой.</p></details></section>
 <section id="team"><div class="sectionhead"><h2>Команда курса</h2></div><div class="team"><div><h3>Лектор</h3><p>Елизавета Власова</p></div><div><h3>Практики</h3><p>Кирилл Захаров<br>Камила Насибуллина<br>Михаил Подсытник<br>Игорь Толстокулаков</p></div><div><h3>Менторы</h3><p>Анастасия Минская<br>Мария Сафронова</p></div></div>@@chat_link@@</section>
-<section id="archive"><div class="sectionhead"><h2>Архив и дополнительные материалы</h2></div><p class="muted">Материалы предыдущего потока для самостоятельного изучения. Их нумерация, сроки и правила сдачи не относятся к текущему семестру.</p><details><summary>Презентации предыдущего потока · 14 файлов</summary><ul>@@archive_links@@</ul></details><details><summary>Задания предыдущего потока · 8 тем</summary><ul>@@legacy_links@@</ul></details></section>
+<section id="archive"><div class="sectionhead"><h2>Материалы прошлого года</h2></div><p class="muted">Материалы предыдущего потока для самостоятельного изучения. Их нумерация, сроки и правила сдачи не относятся к текущему семестру.</p><p class="note"><a href="@@archive_folder_url@@">Прошлогодние презентации на Google Drive</a>. На диске находятся только материалы прошлого года.</p><details><summary>Презентации предыдущего потока · 14 файлов</summary><ul>@@archive_links@@</ul></details><details><summary>Задания предыдущего потока · 8 тем</summary><ul>@@legacy_links@@</ul></details></section>
 <footer><span>ИТМО · Машинное обучение · 2026/27</span><span>Обновлено: @@updated@@</span></footer></main></body></html>'''
-for key in ['organization_url','grades_url','materials_folder_url','updated']:
+for key in ['organization_url','grades_url','archive_folder_url','updated']:
  html=html.replace('@@'+key+'@@',e(cfg[key],quote=True))
 for key,val in [('bot_link',bot_link),('chat_link',chat_link),('archive_links',archive_links),('legacy_links',legacy_links)]:html=html.replace('@@'+key+'@@',val)
 assert '@@' not in html
