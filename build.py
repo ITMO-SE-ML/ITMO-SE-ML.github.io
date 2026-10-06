@@ -73,6 +73,7 @@ head = html.split('<body>', 1)[0].replace('<title>Машинное обучен�
 head = head.replace('Курс машинного обучения ИТМО: лекции, домашние задания, TAIGA, ведомость и правила оценивания. 2026/27 учебный год.', 'Видеозаписи лекций курса машинного обучения ИТМО. 2026/27 учебный год.')
 sidebar = '<aside' + html.split('<aside', 1)[1].split('</aside>', 1)[0] + '</aside>'
 sidebar = sidebar.replace(' aria-current="page"', '').replace('href="recordings.html"', 'href="recordings.html" aria-current="page"')
+sidebar = sidebar.replace('class="brand" href="#main"', 'class="brand" href="index.html"')
 sidebar = re.sub(r'href="#(?!main)([^"]+)"', r'href="index.html#\1"', sidebar)
 page = head + '<body><a class="skip" href="#main">Перейти к записям</a>' + sidebar
 page += '<main id="main" class="recordings-page"><header class="library-header"><div class="topline"><span class="eyebrow">Видеотека курса</span><span>2026/27</span></div><h1>Записи лекций<span class="library-dot">.</span></h1><p class="intro">Выберите лекцию и смотрите в удобном темпе.</p></header>'
