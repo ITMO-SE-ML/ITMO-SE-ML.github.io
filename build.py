@@ -63,24 +63,28 @@ assert '@@' not in html
 (ROOT/'docs/index.html').write_text(html)
 print('Built docs/index.html')
 
-# Collect published recordings from the same lecture cards used on the main page.
-recording_cards = []
+# Collect recordings from the lecture cards so both pages stay in sync.
+recordings = []
 for lecture_id, card in re.findall(r'<article class="lecture" id="(lecture-[0-9]+)">(.*?)</article>', html, re.S):
-    player = re.search(r'<details class="recording">.*?</summary>(.*?)</details>', card, re.S)
-    if not player:
-        continue
-    number = re.search(r'<div class="number">(.*?)</div>', card).group(1)
-    title = re.search(r'<h3>(.*?)</h3>', card).group(1)
-    recording_cards.append(f'<article class="recording-card" id="{lecture_id}"><p class="eyebrow">Лекция {number}</p><h2>{title}</h2>{player.group(1)}</article>')
-head = html.split('<body>', 1)[0]
-head = head.replace('<title>Машинное обучение · ИТМО · 2026/27</title>', '<title>Записи лекций · Машинное обучение · ИТМО · 2026/27</title>')
+    video = re.search(r'youtube-nocookie.com/embed/([A-Za-z0-9_-]{11})', card)
+    if video:
+        recordings.append(dict(id=lecture_id, number=re.search(r'<div class="number">(.*?)</div>',card).group(1), title=re.search(r'<h3>(.*?)</h3>',card).group(1), video=video.group(1)))
+head = html.split('<body>', 1)[0].replace('<title>Машинное обучение · ИТМО · 2026/27</title>', '<title>Записи лекций · Машинное обучение · ИТМО · 2026/27</title>')
 head = head.replace('Курс машинного обучения ИТМО: лекции, домашние задания, TAIGA, ведомость и правила оценивания. 2026/27 учебный год.', 'Видеозаписи лекций курса машинного обучения ИТМО. 2026/27 учебный год.')
 sidebar = '<aside' + html.split('<aside', 1)[1].split('</aside>', 1)[0] + '</aside>'
 sidebar = sidebar.replace(' aria-current="page"', '').replace('href="recordings.html"', 'href="recordings.html" aria-current="page"')
 sidebar = re.sub(r'href="#(?!main)([^"]+)"', r'href="index.html#\1"', sidebar)
 page = head + '<body><a class="skip" href="#main">Перейти к записям</a>' + sidebar
-page += '<main id="main" class="recordings-page"><header><div class="topline"><span class="eyebrow">Машинное обучение</span><span>Осенний семестр · 2026</span></div><h1>Записи лекций</h1><p class="intro">Видеозаписи курса · 2026/27 учебный год</p></header><div class="recording-list">'
-page += ''.join(recording_cards) if recording_cards else '<p class="note">Записи появятся после публикации.</p>'
-page += '</div><footer><span>ИТМО · Машинное обучение · 2026/27</span><span>Обновлено: ' + e(cfg['updated']) + '</span></footer></main></body></html>'
+page += '<main id="main" class="recordings-page"><header class="library-header"><div class="topline"><span class="eyebrow">Видеотека курса</span><span>2026/27</span></div><h1>Записи лекций<span class="library-dot">.</span></h1><p class="intro">Выберите лекцию и смотрите в удобном темпе.</p></header>'
+if recordings:
+    first=recordings[0]
+    page += f'''<div class="watch-layout"><div class="watch-main"><div class="player-screen video-frame"><button type="button" class="player-cover" id="play-recording" aria-label="Смотреть лекцию {first['number']}"><span class="cover-brand">ИТМО <span>/ ML</span></span><span class="cover-number" id="cover-number" aria-hidden="true">{first['number']}</span><span class="cover-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span><span class="cover-caption">Смотреть лекцию</span><span class="cover-semester">Машинное обучение · 2026/27</span></button><iframe id="recording-player" title="Запись лекции {first['number']}" hidden referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><div class="watch-info" aria-live="polite"><p class="watch-kicker" id="watch-number">Лекция {first['number']}</p><h2 id="watch-title">{first['title']}</h2><div class="watch-actions"><span class="watch-author">Елизавета Власова</span><a id="watch-youtube" href="https://www.youtube.com/watch?v={first['video']}" target="_blank" rel="noopener noreferrer">Открыть на YouTube ↗</a></div></div></div><aside class="playlist" aria-label="Выбор лекции"><div class="playlist-heading"><h2>Лекции</h2><span>{len(recordings):02}</span></div><div class="playlist-options">'''
+    for i,r in enumerate(recordings):
+        active=' aria-current="true"' if i==0 else ''
+        page += f'''<a class="recording-option" id="{r['id']}" href="https://www.youtube.com/watch?v={r['video']}" data-video="{r['video']}" data-number="{r['number']}" data-title="{e(r['title'],quote=True)}"{active}><span class="option-art" aria-hidden="true"><span>{r['number']}</span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span><span class="option-copy"><small>Лекция {r['number']}</small><strong>{r['title']}</strong></span></a>'''
+    page += '</div></aside></div><script src="recordings.js" defer></script>'
+else:
+    page += '<p class="note">Записи появятся после публикации.</p>'
+page += '<footer><span>ИТМО · Машинное обучение · 2026/27</span><a href="index.html#materials">Все материалы курса ↗</a></footer></main></body></html>'
 (ROOT/'docs/recordings.html').write_text(page, encoding='utf-8')
 print('Built docs/recordings.html')
