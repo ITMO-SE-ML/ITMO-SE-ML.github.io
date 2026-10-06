@@ -13,6 +13,7 @@
     option.setAttribute('aria-current', 'true');
     const {number, title} = option.dataset;
     document.getElementById('cover-number').textContent = number;
+    document.getElementById('cover-image').src = `https://i.ytimg.com/vi/${option.dataset.video}/maxresdefault.jpg`;
     document.getElementById('watch-number').textContent = `Лекция ${number}`;
     document.getElementById('watch-title').textContent = title;
     document.getElementById('watch-youtube').href = option.href;
