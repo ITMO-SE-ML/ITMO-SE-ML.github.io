@@ -4,6 +4,7 @@ from pathlib import Path
 from html import escape as e
 from urllib.parse import urlparse
 import json
+import re
 ROOT=Path(__file__).resolve().parent
 cfg=json.loads((ROOT/'site.json').read_text())
 for key in ['bot_url','chat_url','grades_url','organization_url','archive_folder_url']:
@@ -25,7 +26,7 @@ html='''<!doctype html>
 <meta name="theme-color" content="#101f38"><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css"></head>
 <body><a class="skip" href="#main">Перейти к материалам</a>
 <aside class="sidebar"><a class="brand" href="#main">ИТМО <span>/ ML</span></a><p class="semester">2026/27 учебный год</p>
-<nav aria-label="Разделы курса"><a href="#materials">Материалы</a><a href="#homework">Домашние задания</a><a href="#taiga">Бот TAIGA</a><a href="#grades">Ведомость</a><a href="#assessment">Оценивание</a><a href="#team">Команда</a><a href="#archive">Архив</a></nav>
+<nav aria-label="Разделы курса"><a href="#materials" aria-current="page">Материалы</a><a href="recordings.html">Записи лекций</a><a href="#homework">Домашние задания</a><a href="#taiga">Бот TAIGA</a><a href="#grades">Ведомость</a><a href="#assessment">Оценивание</a><a href="#team">Команда</a><a href="#archive">Архив</a></nav>
 <div class="sidefoot">Машинное обучение<br>Университет ИТМО<br><br><a href="@@organization_url@@">Организация на GitHub</a></div></aside>
 <main id="main"><header><div class="topline"><span class="eyebrow">Машинное обучение</span><span>Осенний семестр · 2026</span></div>
 <h1>Материалы курса</h1><p class="intro">Лекции, задания и всё, что нужно для учёбы в течение семестра.</p>
@@ -61,3 +62,25 @@ for key,val in [('bot_link',bot_link),('chat_link',chat_link),('archive_links',a
 assert '@@' not in html
 (ROOT/'docs/index.html').write_text(html)
 print('Built docs/index.html')
+
+# Collect published recordings from the same lecture cards used on the main page.
+recording_cards = []
+for lecture_id, card in re.findall(r'<article class="lecture" id="(lecture-[0-9]+)">(.*?)</article>', html, re.S):
+    player = re.search(r'<details class="recording">.*?</summary>(.*?)</details>', card, re.S)
+    if not player:
+        continue
+    number = re.search(r'<div class="number">(.*?)</div>', card).group(1)
+    title = re.search(r'<h3>(.*?)</h3>', card).group(1)
+    recording_cards.append(f'<article class="recording-card" id="{lecture_id}"><p class="eyebrow">Лекция {number}</p><h2>{title}</h2>{player.group(1)}</article>')
+head = html.split('<body>', 1)[0]
+head = head.replace('<title>Машинное обучение · ИТМО · 2026/27</title>', '<title>Записи лекций · Машинное обучение · ИТМО · 2026/27</title>')
+head = head.replace('Курс машинного обучения ИТМО: лекции, домашние задания, TAIGA, ведомость и правила оценивания. 2026/27 учебный год.', 'Видеозаписи лекций курса машинного обучения ИТМО. 2026/27 учебный год.')
+sidebar = '<aside' + html.split('<aside', 1)[1].split('</aside>', 1)[0] + '</aside>'
+sidebar = sidebar.replace(' aria-current="page"', '').replace('href="recordings.html"', 'href="recordings.html" aria-current="page"')
+sidebar = re.sub(r'href="#(?!main)([^"]+)"', r'href="index.html#\1"', sidebar)
+page = head + '<body><a class="skip" href="#main">Перейти к записям</a>' + sidebar
+page += '<main id="main" class="recordings-page"><header><div class="topline"><span class="eyebrow">Машинное обучение</span><span>Осенний семестр · 2026</span></div><h1>Записи лекций</h1><p class="intro">Видеозаписи курса · 2026/27 учебный год</p></header><div class="recording-list">'
+page += ''.join(recording_cards) if recording_cards else '<p class="note">Записи появятся после публикации.</p>'
+page += '</div><footer><span>ИТМО · Машинное обучение · 2026/27</span><span>Обновлено: ' + e(cfg['updated']) + '</span></footer></main></body></html>'
+(ROOT/'docs/recordings.html').write_text(page, encoding='utf-8')
+print('Built docs/recordings.html')
